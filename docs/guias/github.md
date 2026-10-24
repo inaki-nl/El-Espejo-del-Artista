@@ -254,6 +254,9 @@ Si VS Code solicita preparar los cambios antes de realizar el commit, revisa la 
 
 > **Importante:** el commit guarda los cambios en tu repositorio local. Todavía no los has enviado a GitHub.
 
+En caso de tener duda como hacer un buen commit, checar
+- https://gist.github.com/joshbuchea/6f47e86d2510bce28f8e7f42ae84c716
+
 ## 8. Subir los cambios a tu fork
 
 Cuando hayas realizado uno o varios commits, deberás subir la rama a tu fork de GitHub.
