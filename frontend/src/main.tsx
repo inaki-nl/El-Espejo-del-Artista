@@ -1,11 +1,14 @@
-import { StrictMode } from 'react'
-import { createRoot } from 'react-dom/client'
+import { StrictMode } from 'react';
+import { createRoot } from 'react-dom/client';
+import { BrowserRouter } from 'react-router';
+import App from "./App";
 import './index.css'
 
-import Hero from './components/Hero.tsx'
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-  < Hero />
+    <BrowserRouter>
+        < App />
+    </BrowserRouter>
   </StrictMode>,
 )
