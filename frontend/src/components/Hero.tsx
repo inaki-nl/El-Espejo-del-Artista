@@ -29,14 +29,14 @@ export default function Hero() {
               ›
             </li>
             <li aria-current="page" className="font-bold text-[#104734]">
-            {/* TODO: Hacer funcion que detecte dependiendo de la ruta en la que esta muestre el nombre de la ventana como tipo BreadCrumbs */}
+              {/* TODO: Hacer funcion que detecte dependiendo de la ruta en la que esta muestre el nombre de la ventana como tipo BreadCrumbs */}
               {isHome ? "Inicio" : "Mi taller"}
             </li>
           </ol>
         </nav>
 
         <div className="flex items-center gap-4">
-        {/* TODO: Hacer que haga un desplegable en el cual muestre 'Perfil' y todo el manejo de Inicio de Sesion*/}
+          {/* TODO: Hacer que haga un desplegable en el cual muestre 'Perfil' y todo el manejo de Inicio de Sesion*/}
           <button
             type="button"
             title="Próximamente"
@@ -50,8 +50,8 @@ export default function Hero() {
               👩🏽‍🎨
             </span>
             <span>
-            {/*TODO: Hacer función que muestre el nombre del usuario como variable */}
-                NOMBRE <span aria-hidden="true">▾</span>
+              {/*TODO: Hacer función que muestre el nombre del usuario como variable */}
+              NOMBRE <span aria-hidden="true">▾</span>
             </span>
           </button>
         </div>
