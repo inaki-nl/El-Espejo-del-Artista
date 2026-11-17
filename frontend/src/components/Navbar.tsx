@@ -11,7 +11,7 @@ const workshopLinks = [
 ];
 
 function WorkshopLinks() {
-  /* TODO: Hacer deteccion de solo iluminar boton en la pagina en la que estan y un hover de las otras vistas */
+  /* TODO: Hacer deteccion de solo iluminar boton en la pagina en la que estan y un hover de las otras vistas y agregar botón de la pagina de recursos*/
   return (
     <ul className="space-y-[6px]">
       {workshopLinks.map(({ label, icon, to }) => {

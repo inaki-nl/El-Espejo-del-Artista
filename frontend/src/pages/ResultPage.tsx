@@ -9,6 +9,7 @@ import {
 } from "./HomePage";
 
 // 04-resultado: datos ficticios de la obra de ejemplo, sin simular un análisis real.
+// TODO: Indicar los parametros que tiene que recibir el componente para desplegar en la vista e indicar como los tiene que recibir (tipos de datos)
 export default function ResultPage() {
   const metrics = [
     {

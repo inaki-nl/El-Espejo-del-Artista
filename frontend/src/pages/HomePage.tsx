@@ -544,7 +544,7 @@ export function ImagePicker({ compact = false }: { compact?: boolean }) {
 }
 
 // 01-inicio: bienvenida y tres columnas; el encabezado general lo aporta MainLayout.
-// TODO: Hacer los datos de la vista de forma que se le pasen como parametros dependiendo del usuario que tiene la sesión iniciada
+// TODO: Hacer los datos de la vista de forma que se le pasen como parametros dependiendo del usuario que tiene la sesión iniciada, tales como el nombre, y los ultimos analisis
 export default function HomePage() {
   const recent: { kind: ArtworkKind; name: string; date: string }[] = [
     { kind: "landscape", name: "Paisaje mexicano", date: "18 oct 2026" },

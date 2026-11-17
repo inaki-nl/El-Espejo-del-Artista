@@ -13,7 +13,7 @@ export default function Hero() {
   const isHome = pathname === "/";
   const isAnalizeImage = pathname === "/analize-image";
   const isResultImage = pathname === "/result-image";
-  const isGalery = pathname === "/galery";
+  const isGalery = pathname === "/gallery";
   const isProcess = pathname === "/process";
   const isExercise = pathname === "/exercise";
   const isProfile = pathname === "/profile";

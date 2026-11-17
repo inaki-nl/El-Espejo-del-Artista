@@ -4,6 +4,7 @@ import { Artwork, Badge, PageFrame, PageHeading, PageLink } from "./HomePage";
 import type { ArtworkKind } from "./HomePage";
 
 // 05-galeria: obras ilustrativas y filtros locales, sin consultar ni alterar datos reales.
+// TODO: Implementar que reciba la galeria del usuario con el que este iniciado, indicar como lo tiene que recibir en que tipo de dato o asi
 export default function GalleryPage() {
   const [filter, setFilter] = useState("Todas las obras (6)");
   const works: {

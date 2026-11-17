@@ -11,7 +11,7 @@ import {
 import type { ArtworkKind } from "./HomePage";
 
 // 06-progreso: gráfica SVG y comparación de datos ilustrativos, sin librería de gráficas.
-// TODO: Pasar todos los datos de la paginas como parametros dependiendo del usuario que tiene la sesión iniciada
+// TODO: Pasar todos los datos de la paginas como parametros dependiendo del usuario que tiene la sesión iniciada e indicar como los tiene que recibir (tipo de dato, etc)
 export default function ProgressPage() {
   const works: {
     kind: ArtworkKind;

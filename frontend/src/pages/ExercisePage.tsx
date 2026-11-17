@@ -12,6 +12,7 @@ import {
 type ExerciseStatus = "Pendiente" | "En progreso" | "Completado";
 
 // 07-ejercicios: filtros, contadores y avance funcionan únicamente en esta vista.
+// TODO: Hacer que acepte todos los datos necesarios que se muestran en la página como parametro de acuerdo al usuario que tiene iniciada la sesión e indicar como tiene que recibirlos (tipo de datos, etc)
 export default function ExercisePage() {
   const [filter, setFilter] = useState("Todos");
   const [exercises, setExercises] = useState<

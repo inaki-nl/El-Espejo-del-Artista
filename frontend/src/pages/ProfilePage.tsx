@@ -11,7 +11,7 @@ import {
 
 // 09-perfil: información ficticia y edición del nombre solo durante esta visita.
 // No modifica credenciales ni afirma que exista una sesión autenticada.
-// TODO: Hacer que los datos de la página los reciba como parametros dependiendo del usuario que esta iniciado
+// TODO: Hacer que los datos de la página los reciba como parametros dependiendo del usuario que esta iniciado, e indicar como los tiene que recibir de la API (tipos de datos, etc)
 export default function ProfilePage() {
   const [name, setName] = useState("Evelyn Pinales");
   const [draftName, setDraftName] = useState(name);
