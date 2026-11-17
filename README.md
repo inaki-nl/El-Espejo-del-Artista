@@ -14,7 +14,7 @@ Proyecto basado en la creación de un sistema inteligente relacionado con el art
 ### BackEnd
 | Nombre | Proposito |
 |:------:|:---------:|
-|Python| Llenguaje de programación del backend.|
+|Python (3.14.10)| Llenguaje de programación del backend.|
 |FastAPI| Framework para desarrollar la API REST.|
 |PostgreSQL| Sistema gestor de bases de datos relacional.|
 
