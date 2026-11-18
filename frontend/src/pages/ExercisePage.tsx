@@ -9,21 +9,22 @@ import {
   StatCard,
 } from "./HomePage";
 
-type ExerciseStatus = "Pendiente" | "En progreso" | "Completado";
+export type ExerciseStatus = "Pendiente" | "En progreso" | "Completado";
 
-// 07-ejercicios: filtros, contadores y avance funcionan únicamente en esta vista.
-// TODO: Hacer que acepte todos los datos necesarios que se muestran en la página como parametro de acuerdo al usuario que tiene iniciada la sesión e indicar como tiene que recibirlos (tipo de datos, etc)
-export default function ExercisePage() {
-  const [filter, setFilter] = useState("Todos");
-  const [exercises, setExercises] = useState<
-    {
-      id: number;
-      title: string;
-      description: string;
-      icon: string;
-      status: ExerciseStatus;
-    }[]
-  >([
+export type ExerciseItem = {
+  id: string | number;
+  title: string;
+  description: string;
+  icon: string;
+  status: ExerciseStatus;
+};
+export type ExercisePageData = { userId: string; exercises: ExerciseItem[] };
+export type ExercisePageProps = {
+  data?: ExercisePageData;
+  onStatusChange?: (userId: string, id: ExerciseItem["id"], status: ExerciseStatus) => void | Promise<void>;
+};
+
+const demoExercises: ExerciseItem[] = [
     {
       id: 1,
       title: "Luz y sombra con intención",
@@ -63,7 +64,29 @@ export default function ExercisePage() {
       icon: "⚖️",
       status: "Completado",
     },
-  ]);
+  ];
+
+/** API -> data: id del usuario y ejercicios con id único y estado de la unión.
+ * onStatusChange persiste el cambio desde el contenedor. Entregar un array nuevo
+ * cuando la API cambie los datos permite actualizar esta vista sin mezclar usuarios.
+ */
+export default function ExercisePage({
+  data = { userId: "demo", exercises: demoExercises }, onStatusChange,
+}: ExercisePageProps = {}) {
+  return <ExerciseContent key={data.userId} data={data} onStatusChange={onStatusChange} />;
+}
+
+function ExerciseContent({ data, onStatusChange }: { data: ExercisePageData; onStatusChange?: ExercisePageProps["onStatusChange"] }) {
+  const [filter, setFilter] = useState("Todos");
+  const [sourceExercises, setSourceExercises] = useState(data.exercises);
+  const [exercises, setExercises] = useState(data.exercises);
+  const [savingId, setSavingId] = useState<ExerciseItem["id"] | null>(null);
+  // Ajuste condicional al recibir un nuevo snapshot del mismo usuario.
+  // Cambiar de usuario reinicia toda la vista mediante su key.
+  if (sourceExercises !== data.exercises) {
+    setSourceExercises(data.exercises);
+    setExercises(data.exercises);
+  }
   const [message, setMessage] = useState("");
   const filterStatus: Record<string, ExerciseStatus> = {
     Pendientes: "Pendiente",
@@ -75,21 +98,20 @@ export default function ExercisePage() {
       filter === "Todos" || exercise.status === filterStatus[filter],
   );
 
-  function advance(id: number) {
-    setExercises((items) =>
-      items.map((exercise) =>
-        exercise.id === id
-          ? {
-              ...exercise,
-              status:
-                exercise.status === "Pendiente" ? "En progreso" : "Completado",
-            }
-          : exercise,
-      ),
-    );
-    setMessage(
-      "Avance actualizado en esta demostración. Los cambios duran mientras permanezcas en la vista.",
-    );
+  async function advance(id: ExerciseItem["id"]) {
+    const exercise = exercises.find((item) => item.id === id);
+    if (!exercise || exercise.status === "Completado" || savingId !== null) return;
+    const nextStatus: ExerciseStatus = exercise.status === "Pendiente" ? "En progreso" : "Completado";
+    setSavingId(id);
+    try {
+      await onStatusChange?.(data.userId, id, nextStatus);
+      setExercises((items) => items.map((item) =>
+        item.id === id && item.status === exercise.status ? { ...item, status: nextStatus } : item
+      ));
+      setMessage(onStatusChange ? "Avance guardado." : "Avance actualizado solo en esta vista.");
+    } catch {
+      setMessage("No se pudo guardar el avance. El estado no se modificó.");
+    } finally { setSavingId(null); }
   }
 
   return (
@@ -180,10 +202,11 @@ export default function ExercisePage() {
               ) : (
                 <button
                   type="button"
+                  disabled={savingId !== null}
                   onClick={() => advance(exercise.id)}
                   className="cursor-pointer rounded-full bg-[#f52e70] px-[15px] py-[9px] text-[12px] font-bold text-white shadow-[0_4px_9px_#f52e7026] hover:bg-[#df245f] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#104734]"
                 >
-                  {exercise.status === "Pendiente" ? "Empezar" : "Completar"}
+                  {savingId === exercise.id ? "Guardando…" : exercise.status === "Pendiente" ? "Empezar" : "Completar"}
                 </button>
               )}
             </li>

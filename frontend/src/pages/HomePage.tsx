@@ -5,6 +5,39 @@ import { Link } from "react-router";
 export type ArtworkKind =
   "landscape" | "stillLife" | "portrait" | "garden" | "eye" | "house";
 
+
+/** Datos ya autorizados por la API. El contenedor entrega solo los del usuario activo.
+ * No se obtienen ni se simulan sesiones dentro de estas páginas.
+ * Identificadores: string. Fechas nuevas: ISO 8601. Métricas: números de 0 a 100.
+ */
+export type PageUser = { id: string; name: string };
+export type AnalysisStatus = "Pendiente" | "En progreso" | "Completado";
+export type MetricValues = [contrast: number, illumination: number, balance: number];
+export type ArtworkData = {
+  id: string;
+  kind: ArtworkKind;
+  title: string;
+  date: string;
+  imageUrl?: string;
+};
+export type RecentAnalysis = ArtworkData & { status: AnalysisStatus };
+export type HomePageData = {
+  user: PageUser;
+  recentAnalyses: RecentAnalysis[];
+  tip: { title: string; description: string };
+};
+export type HomePageProps = { data?: HomePageData };
+
+/** Presentación de fechas ISO sin desplazar el día por la zona horaria.
+ * Los textos de fecha de las maquetas se conservan para compatibilidad.
+ */
+export function DisplayDate({ value, options }: { value: string; options?: Intl.DateTimeFormatOptions }) {
+  const date = new Date(value);
+  return <>{Number.isFinite(date.getTime())
+    ? new Intl.DateTimeFormat("es-MX", { day: "2-digit", month: "short", year: "numeric", ...options, timeZone: "UTC" }).format(date)
+    : value || "Sin fecha"}</>;
+}
+
 // Piezas visuales compartidas entre las páginas para conservar la misma paleta,
 // bordes y tipografía. No incluyen la navbar ni el encabezado del layout.
 export function Panel({
@@ -146,11 +179,15 @@ export function Artwork({
   className = "",
   decorative = false,
   format = "wide",
+  imageUrl,
+  imageAlt,
 }: {
   kind?: ArtworkKind;
   className?: string;
   decorative?: boolean;
   format?: "wide" | "tall";
+  imageUrl?: string;
+  imageAlt?: string;
 }) {
   const titles = {
     landscape: "Paisaje mexicano",
@@ -160,6 +197,12 @@ export function Artwork({
     eye: "Estudio de mirada",
     house: "Perspectiva de una casa",
   };
+  // Las imágenes recibidas por props reutilizan el contenedor de las ilustraciones.
+  if (imageUrl) {
+    return <img src={imageUrl} alt={decorative ? "" : imageAlt ?? titles[kind]}
+      aria-hidden={decorative || undefined} loading="lazy" decoding="async"
+      className={`block h-full w-full object-cover ${className}`} />;
+  }
   return (
     <svg
       viewBox={
@@ -544,14 +587,24 @@ export function ImagePicker({ compact = false }: { compact?: boolean }) {
 }
 
 // 01-inicio: bienvenida y tres columnas; el encabezado general lo aporta MainLayout.
-// TODO: Hacer los datos de la vista de forma que se le pasen como parametros dependiendo del usuario que tiene la sesión iniciada, tales como el nombre, y los ultimos analisis
-export default function HomePage() {
-  const recent: { kind: ArtworkKind; name: string; date: string }[] = [
+/** Recibe data: HomePageData como prop. Sin data conserva únicamente la maqueta.
+ * Un array vacío se muestra vacío: nunca se sustituye por obras de otra persona.
+ */
+export default function HomePage({ data }: HomePageProps = {}) {
+  const demoRecent: { kind: ArtworkKind; name: string; date: string }[] = [
     { kind: "landscape", name: "Paisaje mexicano", date: "18 oct 2026" },
     { kind: "stillLife", name: "Bodegón con naranjas", date: "15 oct 2026" },
     { kind: "portrait", name: "Retrato a lápiz", date: "10 oct 2026" },
     { kind: "garden", name: "Jardín al atardecer", date: "05 oct 2026" },
   ];
+  const recent: RecentAnalysis[] = (data ? data.recentAnalyses : demoRecent.map((work) => ({
+    id: work.kind, kind: work.kind, title: work.name, date: work.date, status: "Completado" as const,
+  }))).slice().sort((a, b) => (Date.parse(b.date) || 0) - (Date.parse(a.date) || 0)).slice(0, 4);
+  const userName = data ? data.user.name.trim().split(/\s+/)[0] || "artista" : "Evelyn";
+  const tip = data ? data.tip : {
+    title: "☀️ Explora las luces y sombras",
+    description: "Una fuente de luz bien definida puede ayudarte a comprender el volumen en tus próximas obras.",
+  };
 
   return (
     <PageFrame>
@@ -567,7 +620,7 @@ export default function HomePage() {
             id="welcome-title"
             className="text-[32px] leading-[1.08] font-bold text-[#873b2c] [font-family:Georgia,serif] sm:text-[42px]"
           >
-            ¡Hola, Evelyn!
+            ¡Hola, {userName}!
             <br />
             Tu mirada sigue creciendo.
           </h1>
@@ -604,10 +657,10 @@ export default function HomePage() {
           <div className="grid grid-cols-4 gap-2">
             {recent.map((work) => (
               <div
-                key={work.kind}
+                key={work.id}
                 className="h-[57px] overflow-hidden rounded-lg"
               >
-                <Artwork kind={work.kind} />
+                <Artwork kind={work.kind} imageUrl={work.imageUrl} imageAlt={work.title} />
               </div>
             ))}
           </div>
@@ -616,31 +669,32 @@ export default function HomePage() {
           <div className="mb-3 flex items-center justify-between gap-2">
             <SectionTitle>Últimos análisis</SectionTitle>
             <Link
-              to="/galery"
+              to="/gallery"
               className="text-[12px] text-[#8b7565] hover:underline"
             >
               Ver todos →
             </Link>
           </div>
+          {recent.length === 0 && <p className="py-5 text-[13px] text-[#8b7565]">Todavía no hay análisis para este usuario.</p>}
           <ul className="divide-y divide-[#efe2d4]">
             {recent.map((work) => (
-              <li key={work.kind}>
+              <li key={work.id}>
                 <Link
                   to="/result-image"
                   className="flex items-center gap-[10px] rounded-lg py-[9px] focus-visible:outline-2 focus-visible:outline-[#f52e70]"
                 >
                   <div className="h-[53px] w-[58px] shrink-0 overflow-hidden rounded-lg">
-                    <Artwork kind={work.kind} decorative />
+                    <Artwork kind={work.kind} imageUrl={work.imageUrl} decorative />
                   </div>
                   <div className="min-w-0 flex-1">
                     <p className="text-[12px] font-bold text-[#4f4941]">
-                      {work.name}
+                      {work.title}
                     </p>
                     <p className="mt-1 text-[10px] text-[#a08670]">
-                      {work.date}
+                      <DisplayDate value={work.date} />
                     </p>
                   </div>
-                  <Badge>Completado</Badge>
+                  <Badge tone={work.status === "Completado" ? "green" : work.status === "En progreso" ? "pink" : "amber"}>{work.status}</Badge>
                 </Link>
               </li>
             ))}
@@ -649,10 +703,9 @@ export default function HomePage() {
         <Panel className="md:col-span-2 xl:col-span-1">
           <SectionTitle>Consejos para ti</SectionTitle>
           <div className="mt-3 rounded-[14px] border border-[#ffc5d4] bg-[#fde1e7] p-[15px] text-[13px] leading-5 text-[#85344c]">
-            <p className="font-bold">☀️ Explora las luces y sombras</p>
+            <p className="font-bold">{tip.title}</p>
             <p className="mt-3">
-              Una fuente de luz bien definida puede ayudarte a comprender el
-              volumen en tus próximas obras.
+              {tip.description}
             </p>
           </div>
           <h3 className="mt-[18px] text-[18px] font-bold [font-family:Georgia,serif]">

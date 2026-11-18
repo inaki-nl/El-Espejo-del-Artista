@@ -1,20 +1,23 @@
-import { Link } from "react-router";
+import { Link, useLocation } from "react-router";
 
-// Opciones del menú de docs/img. Solo Inicio tiene una ruta implementada.
+// Opciones del menú enlazadas a las rutas existentes del taller.
 const workshopLinks = [
   { label: "Inicio", icon: "⌂", to: "/" },
   { label: "Analizar obra", icon: "▧", to: "/analize-image" },
   { label: "Mi galería", icon: "▣", to: "/gallery" },
   { label: "Mi progreso", icon: "▥", to: "/progress" },
   { label: "Mis ejercicios", icon: "✎", to: "/exercise" },
+  { label: "Recursos", icon: "♧", to: "/resources" },
   { label: "Mi perfil", icon: "◉", to: "/profile" },
 ];
 
 function WorkshopLinks() {
-  /* TODO: Hacer deteccion de solo iluminar boton en la pagina en la que estan y un hover de las otras vistas y agregar botón de la pagina de recursos*/
+  const { pathname } = useLocation();
+  const path = pathname.replace(/\/+$/, "") || "/";
   return (
     <ul className="space-y-[6px]">
       {workshopLinks.map(({ label, icon, to }) => {
+        const active = path === to || (to === "/analize-image" && path === "/result-image");
         const content = (
           <>
             <span
@@ -32,8 +35,8 @@ function WorkshopLinks() {
             {to ? (
               <Link
                 to={to}
-                aria-current="page"
-                className="flex min-h-[46px] items-center gap-[10px] rounded-xl bg-[#f52e70] px-4 py-3 text-white shadow-[0_6px_14px_#073a2926] transition-colors hover:bg-[#df245f] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#ffd080]"
+                aria-current={active ? (path === "/result-image" ? "location" : "page") : undefined}
+                className={`flex min-h-[46px] items-center gap-[10px] rounded-xl px-4 py-3 transition-colors focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#ffd080] ${active ? "bg-[#f52e70] text-white shadow-[0_6px_14px_#073a2926] hover:bg-[#df245f]" : "text-[#e4eee5] hover:bg-[#ffffff14] hover:text-[#ffe7b9]"}`}
               >
                 {content}
               </Link>
@@ -80,7 +83,7 @@ export default function Navbar() {
         </span>
       </Link>
 
-      {/* Menú de escritorio, con Inicio resaltado en rosa. */}
+      {/* Menú de escritorio, con la sección actual resaltada en rosa. */}
       <div className="mt-[19px] hidden border-t border-[#ffffff2e] pt-[21px] lg:block">
         <p className="mb-[17px] px-[14px] text-[11px] font-normal tracking-[0.16em] text-[#abcab7]">
           MI TALLER

@@ -1,13 +1,19 @@
 import { useState } from "react";
 import { Link } from "react-router";
-import { Artwork, Badge, PageFrame, PageHeading, PageLink } from "./HomePage";
-import type { ArtworkKind } from "./HomePage";
+import { Artwork, Badge, DisplayDate, PageFrame, PageHeading, PageLink } from "./HomePage";
+import type { AnalysisStatus, ArtworkData, ArtworkKind } from "./HomePage";
 
 // 05-galeria: obras ilustrativas y filtros locales, sin consultar ni alterar datos reales.
-// TODO: Implementar que reciba la galeria del usuario con el que este iniciado, indicar como lo tiene que recibir en que tipo de dato o asi
-export default function GalleryPage() {
-  const [filter, setFilter] = useState("Todas las obras (6)");
-  const works: {
+export type GalleryWork = ArtworkData & { status: AnalysisStatus };
+export type GalleryPageData = { userId: string; works: GalleryWork[] };
+export type GalleryPageProps = { data?: GalleryPageData };
+
+/** API -> prop data: usuario autorizado y works con id único, fecha ISO, imagen
+ * y estado. [] es una galería vacía. Sin data se conserva la maqueta existente.
+ */
+export default function GalleryPage({ data }: GalleryPageProps = {}) {
+  const [filter, setFilter] = useState("all");
+  const demoWorks: {
     kind: ArtworkKind;
     title: string;
     date: string;
@@ -45,10 +51,13 @@ export default function GalleryPage() {
       order: 1,
     },
   ];
-  // Las seis obras de la referencia tienen su análisis completado.
-  const visibleWorks =
-    filter === "Más recientes"
-      ? [...works].sort((a, b) => b.order - a.order)
+  const works: GalleryWork[] = data ? data.works : demoWorks.map((work) => ({
+    ...work, id: work.kind, status: "Completado" as const,
+  }));
+  const visibleWorks = filter === "completed"
+    ? works.filter((work) => work.status === "Completado")
+    : filter === "recent"
+      ? [...works].sort((a, b) => (Date.parse(b.date) || 0) - (Date.parse(a.date) || 0))
       : works;
 
   return (
@@ -63,25 +72,24 @@ export default function GalleryPage() {
         aria-label="Filtrar obras"
         className="mb-[18px] flex flex-wrap items-center gap-2"
       >
-        {["Todas las obras (6)", "Más recientes", "Análisis completados"].map(
-          (option) => (
-            <button
-              key={option}
-              type="button"
-              aria-pressed={filter === option}
-              onClick={() => setFilter(option)}
-              className={`cursor-pointer rounded-full border px-[15px] py-[9px] text-[12px] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#104734] ${filter === option ? "border-[#ffb8cc] bg-[#fde5ec] font-bold text-[#dc2a61]" : "border-[#e9d1bc] bg-white text-[#805d48] hover:bg-[#fff1df]"}`}
-            >
-              {option}
-            </button>
-          ),
-        )}
+        {[
+          { value: "all", label: `Todas las obras (${works.length})` },
+          { value: "recent", label: "Más recientes" },
+          { value: "completed", label: "Análisis completados" },
+        ].map(({ value, label }) => (
+          <button key={value} type="button" aria-pressed={filter === value}
+            onClick={() => setFilter(value)}
+            className={`cursor-pointer rounded-full border px-[15px] py-[9px] text-[12px] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#104734] ${filter === value ? "border-[#ffb8cc] bg-[#fde5ec] font-bold text-[#dc2a61]" : "border-[#e9d1bc] bg-white text-[#805d48] hover:bg-[#fff1df]"}`}>
+            {label}
+          </button>
+        ))}
         <Badge tone="pink">Obras privadas del usuario</Badge>
       </div>
+      {visibleWorks.length === 0 && <p role="status" className="py-6 text-center text-[#8b7565]">No hay obras en esta categoría.</p>}
       <div className="grid gap-[17px] sm:grid-cols-2 xl:grid-cols-3">
         {visibleWorks.map((work) => (
           <Link
-            key={work.kind}
+            key={work.id}
             to="/result-image"
             className="group overflow-hidden rounded-[18px] border border-[#efd4bc] bg-[#fffdf9] p-[10px] shadow-[0_4px_14px_#764d2410] transition-shadow hover:shadow-md focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#f52e70]"
             aria-label={`Ver análisis de ejemplo de ${work.title}`}
@@ -89,6 +97,8 @@ export default function GalleryPage() {
             <div className="h-[176px] overflow-hidden rounded-[10px]">
               <Artwork
                 kind={work.kind}
+                imageUrl={work.imageUrl}
+                imageAlt={work.title}
                 className="transition-transform group-hover:scale-[1.02]"
               />
             </div>
@@ -97,8 +107,8 @@ export default function GalleryPage() {
                 {work.title}
               </h2>
               <p className="mt-[7px] text-[11px] text-[#a08670]">
-                {work.date} ·{" "}
-                <span className="text-[#4a8150]">Análisis completado</span>
+                <DisplayDate value={work.date} /> ·{" "}
+                <span className="text-[#4a8150]">{work.status === "Completado" ? "Análisis completado" : work.status}</span>
               </p>
             </div>
           </Link>

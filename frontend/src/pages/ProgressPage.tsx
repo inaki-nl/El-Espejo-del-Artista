@@ -1,6 +1,7 @@
 import { useState } from "react";
 import {
   Artwork,
+  DisplayDate,
   PageFrame,
   PageHeading,
   PageLink,
@@ -8,17 +9,19 @@ import {
   SectionTitle,
   StatCard,
 } from "./HomePage";
-import type { ArtworkKind } from "./HomePage";
+import type { ArtworkData, MetricValues } from "./HomePage";
 
-// 06-progreso: gráfica SVG y comparación de datos ilustrativos, sin librería de gráficas.
-// TODO: Pasar todos los datos de la paginas como parametros dependiendo del usuario que tiene la sesión iniciada e indicar como los tiene que recibir (tipo de dato, etc)
-export default function ProgressPage() {
-  const works: {
-    kind: ArtworkKind;
-    title: string;
-    date: string;
-    metrics: number[];
-  }[] = [
+export type ProgressWork = ArtworkData & { metrics: MetricValues };
+export type ProgressPageData = {
+  userId: string;
+  works: ProgressWork[];
+  history: { date: string; label?: string; metrics: MetricValues }[];
+  summary: { registeredWorks: number; completedAnalyses: number; completedExercises: number; assignedExercises: number };
+  observation: string;
+};
+export type ProgressPageProps = { data?: ProgressPageData };
+
+const demoWorks: Omit<ProgressWork, "id">[] = [] = [
     {
       kind: "landscape",
       title: "Paisaje mexicano",
@@ -56,30 +59,42 @@ export default function ProgressPage() {
       metrics: [43, 51, 47],
     },
   ];
-  const [previous, setPrevious] = useState("eye");
-  const [current, setCurrent] = useState("landscape");
-  const previousWork = works.find((work) => work.kind === previous) ?? works[4];
-  const currentWork = works.find((work) => work.kind === current) ?? works[0];
+const demoProgress: ProgressPageData = {
+  userId: "demo",
+  works: demoWorks.map((work) => ({ ...work, id: work.kind })),
+  history: [
+    { date: "2026-09-15", label: "Sep 15", metrics: [42, 49, 46] },
+    { date: "2026-09-22", label: "Sep 22", metrics: [47, 55, 52] },
+    { date: "2026-09-29", label: "Sep 29", metrics: [56, 63, 65] },
+    { date: "2026-10-05", label: "Oct 5", metrics: [57, 70, 68] },
+    { date: "2026-10-10", label: "Oct 10", metrics: [64, 75, 78] },
+    { date: "2026-10-18", label: "Oct 18", metrics: [67, 80, 84] },
+  ],
+  summary: { registeredWorks: 6, completedAnalyses: 6, completedExercises: 3, assignedExercises: 5 },
+  observation: "cada obra explora decisiones distintas. Tu siguiente práctica puede explorar cómo distribuir el peso visual sin perder espontaneidad.",
+};
+
+/** API -> data: snapshot autorizado del usuario. Fechas ISO, contadores number
+ * y metrics [contraste, iluminación, balance], cada valor entre 0 y 100.
+ * history admite cualquier cantidad de puntos, incluso cero o uno.
+ */
+export default function ProgressPage({ data = demoProgress }: ProgressPageProps = {}) {
+  return <ProgressContent key={data.userId} data={data} />;
+}
+
+function ProgressContent({ data }: { data: ProgressPageData }) {
+  const clamp = (value: number) => Number.isFinite(value) ? Math.min(100, Math.max(0, value)) : 0;
+  const works = data.works.map((work) => ({ ...work, metrics: work.metrics.map(clamp) as MetricValues }));
+  const history = [...data.history].sort((a, b) => a.date.localeCompare(b.date));
+  const [previous, setPrevious] = useState(data === demoProgress ? "eye" : works.at(-1)?.id ?? "");
+  const [current, setCurrent] = useState(works[0]?.id ?? "");
+  const previousWork = works.find((work) => work.id === previous) ?? works.at(-1);
+  const currentWork = works.find((work) => work.id === current) ?? works[0];
   const series = [
-    {
-      label: "Contraste",
-      color: "stroke-[#f52e70]",
-      values: [42, 47, 56, 57, 64, 67],
-      dot: "text-[#f52e70]",
-    },
-    {
-      label: "Iluminación",
-      color: "stroke-[#e8a136]",
-      values: [49, 55, 63, 70, 75, 80],
-      dot: "text-[#e8a136]",
-    },
-    {
-      label: "Balance",
-      color: "stroke-[#208a6e]",
-      values: [46, 52, 65, 68, 78, 84],
-      dot: "text-[#208a6e]",
-    },
-  ];
+    { label: "Contraste", color: "stroke-[#f52e70]", dot: "text-[#f52e70]" },
+    { label: "Iluminación", color: "stroke-[#e8a136]", dot: "text-[#e8a136]" },
+    { label: "Balance", color: "stroke-[#208a6e]", dot: "text-[#208a6e]" },
+  ].map((line, metric) => ({ ...line, values: history.map((entry) => clamp(entry.metrics[metric])) }));
 
   return (
     <PageFrame>
@@ -90,16 +105,16 @@ export default function ProgressPage() {
         action={<PageLink to="/gallery">Explorar mis obras →</PageLink>}
       />
       <div className="mb-[18px] grid gap-[15px] sm:grid-cols-3">
-        <StatCard label="Obras registradas" value={6} note="Ejemplo" />
+        <StatCard label="Obras registradas" value={data.summary.registeredWorks} note={data === demoProgress ? "Ejemplo" : undefined} />
         <StatCard
           label="Análisis completados"
-          value={6}
-          note="Historial disponible"
+          value={data.summary.completedAnalyses}
+          note={data.summary.completedAnalyses > 0 ? "Historial disponible" : "Sin análisis"}
         />
         <StatCard
           label="Ejercicios completados"
-          value={3}
-          note="De 5 asignados"
+          value={data.summary.completedExercises}
+          note={`De ${data.summary.assignedExercises} asignados`}
         />
       </div>
       <div className="grid gap-[19px] xl:grid-cols-2">
@@ -113,7 +128,7 @@ export default function ProgressPage() {
             <svg
               viewBox="0 0 520 205"
               role="img"
-              aria-label="Ejemplo de evolución: contraste de 42 a 67, iluminación de 49 a 80 y balance de 46 a 84, entre septiembre y octubre"
+              aria-label={`Evolución de contraste, iluminación y balance en ${history.length} obras`}
               className="h-auto w-full"
             >
               {[20, 40, 60, 80, 100].map((value) => (
@@ -140,7 +155,7 @@ export default function ProgressPage() {
                   points={line.values
                     .map(
                       (value, index) =>
-                        `${46 + index * 89},${176 - value * 1.4}`,
+                        `${46 + index * (445 / Math.max(history.length - 1, 1))},${176 - value * 1.4}`,
                     )
                     .join(" ")}
                   className={`fill-none stroke-[3] ${line.color}`}
@@ -148,21 +163,17 @@ export default function ProgressPage() {
                   strokeLinejoin="round"
                 />
               ))}
-              {["Sep 15", "Sep 22", "Sep 29", "Oct 5", "Oct 10", "Oct 18"].map(
-                (date, index) => (
-                  <text
-                    key={date}
-                    x={46 + index * 89}
-                    y="199"
-                    textAnchor={index === 5 ? "end" : "start"}
-                    className="fill-[#958272] text-[9px]"
-                  >
-                    {date}
-                  </text>
-                ),
-              )}
+              {history.map((entry, index) => index !== 0 && index !== history.length - 1 && index % Math.max(1, Math.ceil((history.length - 1) / 5)) !== 0 ? null : (
+                <text key={`${entry.date}-${index}`} x={46 + index * (445 / Math.max(history.length - 1, 1))}
+                  y="199" textAnchor={index === history.length - 1 ? "end" : "start"}
+                  className="fill-[#958272] text-[9px]">
+                  {entry.label ?? <DisplayDate value={entry.date} options={{ year: undefined }} />}
+                </text>
+              ))}
+              {history.length === 1 && series.map((line) => <circle key={line.label} cx="46" cy={176 - line.values[0] * 1.4} r="3" className={`fill-[#fffdf9] stroke-[2] ${line.color}`} />)}
             </svg>
           </div>
+          {history.length === 0 && <p className="mt-3 text-[12px] text-[#8b7565]">Todavía no hay métricas en el historial.</p>}
           <div className="mt-3 flex flex-wrap gap-4 text-[11px]">
             {series.map((line) => (
               <span key={line.label} className={line.dot}>
@@ -181,13 +192,13 @@ export default function ProgressPage() {
             {[
               {
                 label: "Obra anterior",
-                value: previous,
+                value: previousWork?.id ?? "",
                 change: setPrevious,
                 id: "previous-work",
               },
               {
                 label: "Obra actual",
-                value: current,
+                value: currentWork?.id ?? "",
                 change: setCurrent,
                 id: "current-work",
               },
@@ -202,11 +213,13 @@ export default function ProgressPage() {
                 <select
                   id={field.id}
                   value={field.value}
+                  disabled={works.length === 0}
                   onChange={(event) => field.change(event.target.value)}
                   className="w-full rounded-[10px] border border-[#e9d1bc] bg-white p-3 text-[13px] text-[#403a33] outline-none focus:ring-2 focus:ring-[#f52e7040]"
                 >
+                  {works.length === 0 && <option value="">Sin obras disponibles</option>}
                   {works.map((work) => (
-                    <option key={work.kind} value={work.kind}>
+                    <option key={work.id} value={work.id}>
                       {work.title}
                     </option>
                   ))}
@@ -215,7 +228,7 @@ export default function ProgressPage() {
             ))}
           </div>
           <div className="mt-7 space-y-4" aria-live="polite">
-            {["Contraste", "Iluminación", "Balance"].map((label, index) => {
+            {previousWork && currentWork ? ["Contraste", "Iluminación", "Balance"].map((label, index) => {
               const delta =
                 currentWork.metrics[index] - previousWork.metrics[index];
               return (
@@ -257,12 +270,10 @@ export default function ProgressPage() {
                   </span>
                 </div>
               );
-            })}
+            }) : <p className="text-[12px] text-[#8b7565]">Añade obras para comenzar a compararlas.</p>}
           </div>
           <div className="mt-5 rounded-xl border border-[#c8dfbf] bg-[#e8f1e4] p-[15px] text-[13px] leading-5 text-[#426e45]">
-            <strong>🌿 Una observación útil:</strong> cada obra explora
-            decisiones distintas. Tu siguiente práctica puede explorar cómo
-            distribuir el peso visual sin perder espontaneidad.
+            <strong>🌿 Una observación útil:</strong> {data.observation}
           </div>
         </Panel>
       </div>
@@ -270,14 +281,14 @@ export default function ProgressPage() {
         <SectionTitle>Línea de tiempo</SectionTitle>
         <div className="mt-3 grid grid-cols-2 gap-[13px] sm:grid-cols-3 xl:grid-cols-6">
           {works.map((work) => (
-            <div key={work.kind}>
+            <div key={work.id}>
               <div className="h-[100px] overflow-hidden rounded-[10px]">
-                <Artwork kind={work.kind} />
+                <Artwork kind={work.kind} imageUrl={work.imageUrl} imageAlt={work.title} />
               </div>
               <h3 className="mt-[10px] text-[12px] leading-4 font-bold">
                 {work.title}
               </h3>
-              <p className="text-[12px] text-[#8b7565]">{work.date}</p>
+              <p className="text-[12px] text-[#8b7565]"><DisplayDate value={work.date} /></p>
             </div>
           ))}
         </div>

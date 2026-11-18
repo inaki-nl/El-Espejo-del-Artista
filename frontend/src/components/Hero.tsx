@@ -8,15 +8,22 @@ const pennantColors = [
   "bg-[#104734]",
 ];
 
-export default function Hero() {
+export type HeroProps = { user?: { name: string } | null };
+
+/** El contenedor puede pasar el nombre de su usuario autenticado.
+ * Sin usuario se muestra una etiqueta neutral, sin inventar una sesión.
+ */
+export default function Hero({ user = null }: HeroProps = {}) {
   const { pathname } = useLocation();
-  const isHome = pathname === "/";
-  const isAnalizeImage = pathname === "/analize-image";
-  const isResultImage = pathname === "/result-image";
-  const isGalery = pathname === "/gallery";
-  const isProcess = pathname === "/process";
-  const isExercise = pathname === "/exercise";
-  const isProfile = pathname === "/profile";
+  const path = pathname.replace(/\/+$/, "") || "/";
+  const labels: Record<string, string> = {
+    "/": "Inicio", "/analize-image": "Analizar obra",
+    "/result-image": "Resultado del análisis", "/gallery": "Mi galería",
+    "/progress": "Mi progreso", "/exercise": "Mis ejercicios",
+    "/profile": "Mi perfil", "/resources": "Recursos", "/access": "Acceso",
+  };
+  const pageLabel = labels[path] ?? "Mi taller";
+  const userName = user?.name.trim() || "Mi cuenta";
 
   return (
     <div>
@@ -29,8 +36,7 @@ export default function Hero() {
               ›
             </li>
             <li aria-current="page" className="font-bold text-[#104734]">
-              {/* TODO: Hacer funcion que detecte dependiendo de la ruta en la que esta muestre el nombre de la ventana como tipo BreadCrumbs */}
-              {isHome ? "Inicio" : "Mi taller"}
+              {pageLabel}
             </li>
           </ol>
         </nav>
@@ -40,7 +46,7 @@ export default function Hero() {
           <button
             type="button"
             title="Próximamente"
-            aria-label="Perfil de Evelyn, próximamente"
+            aria-label={user ? `Perfil de ${userName}, próximamente` : "Opciones de cuenta, próximamente"}
             className="flex cursor-default items-center gap-[15px] font-bold text-[#653018]"
           >
             <span
@@ -50,8 +56,7 @@ export default function Hero() {
               👩🏽‍🎨
             </span>
             <span>
-              {/*TODO: Hacer función que muestre el nombre del usuario como variable */}
-              NOMBRE <span aria-hidden="true">▾</span>
+              {userName} <span aria-hidden="true">▾</span>
             </span>
           </button>
         </div>

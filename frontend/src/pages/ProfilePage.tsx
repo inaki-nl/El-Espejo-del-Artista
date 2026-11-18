@@ -2,21 +2,49 @@ import { useState } from "react";
 import { Link } from "react-router";
 import {
   Badge,
+  DisplayDate,
   PageFrame,
   PageHeading,
   PageLink,
   Panel,
   SectionTitle,
 } from "./HomePage";
+import type { PageUser } from "./HomePage";
 
 // 09-perfil: información ficticia y edición del nombre solo durante esta visita.
 // No modifica credenciales ni afirma que exista una sesión autenticada.
-// TODO: Hacer que los datos de la página los reciba como parametros dependiendo del usuario que esta iniciado, e indicar como los tiene que recibir de la API (tipos de datos, etc)
-export default function ProfilePage() {
-  const [name, setName] = useState("Evelyn Pinales");
+export type ProfilePageData = {
+  user: PageUser & { email: string; registeredAt: string; status: "Activa" | "Inactiva" };
+  biography: string;
+  galleryCount: number;
+  completedExercises: number;
+};
+export type ProfilePageProps = {
+  data?: ProfilePageData;
+  onNameChange?: (userId: string, name: string) => void | Promise<void>;
+};
+
+const demoProfile: ProfilePageData = {
+  user: { id: "demo", name: "Evelyn Pinales", email: "evelyn@ejemplo.com", registeredAt: "2026-09-14", status: "Activa" },
+  biography: "Creadora en proceso · Cuenta privada",
+  galleryCount: 6, completedExercises: 3,
+};
+
+/** API -> data: usuario autorizado, fechas ISO y contadores numéricos.
+ * onNameChange permite persistir el nombre desde el contenedor; si no se entrega,
+ * se mantiene la edición local de la maqueta, sin afirmar que se guardó en la API.
+ */
+export default function ProfilePage({ data = demoProfile, onNameChange }: ProfilePageProps = {}) {
+  return <ProfileContent key={data.user.id} data={data} onNameChange={onNameChange} />;
+}
+
+function ProfileContent({ data, onNameChange }: { data: ProfilePageData; onNameChange?: ProfilePageProps["onNameChange"] }) {
+  const [localName, setLocalName] = useState<{ source: string; value: string } | null>(null);
+  const name = localName?.source === data.user.name ? localName.value : data.user.name;
   const [draftName, setDraftName] = useState(name);
   const [editing, setEditing] = useState(false);
   const [message, setMessage] = useState("");
+  const [saving, setSaving] = useState(false);
 
   return (
     <PageFrame>
@@ -45,10 +73,10 @@ export default function ProfilePage() {
                   {name}
                 </h2>
                 <p className="mt-3 text-[12px] text-[#8b7b6b]">
-                  Creadora en proceso · Cuenta privada
+                  {data.biography}
                 </p>
                 <div className="mt-3">
-                  <Badge>Miembro desde septiembre de 2026</Badge>
+                  <Badge>Miembro desde <DisplayDate value={data.user.registeredAt} options={{ day: undefined, month: "long", year: "numeric" }} /></Badge>
                 </div>
               </div>
             </div>
@@ -58,12 +86,12 @@ export default function ProfilePage() {
             <dl className="mt-3 grid gap-[14px] sm:grid-cols-2">
               {[
                 ["Nombre", name],
-                ["Correo electrónico", "evelyn@ejemplo.com"],
-                ["Fecha de registro", "14 sep 2026"],
-                ["Estado de cuenta", "Activa"],
+                ["Correo electrónico", data.user.email],
+                ["Fecha de registro", <DisplayDate key="registered" value={data.user.registeredAt} />],
+                ["Estado de cuenta", data.user.status],
               ].map(([label, value]) => (
                 <div
-                  key={label}
+                  key={String(label)}
                   className="min-w-0 rounded-xl border border-[#f0ddc9] bg-[#fff8ef] p-[14px]"
                 >
                   <dt className="text-[11px] text-[#a08776]">{label}</dt>
@@ -76,14 +104,19 @@ export default function ProfilePage() {
             {editing ? (
               <form
                 className="mt-[18px]"
-                onSubmit={(event) => {
+                onSubmit={async (event) => {
                   event.preventDefault();
-                  if (!draftName.trim()) return;
-                  setName(draftName.trim());
-                  setEditing(false);
-                  setMessage(
-                    "Nombre actualizado en esta vista de demostración.",
-                  );
+                  const nextName = draftName.trim();
+                  if (!nextName || nextName.length > 80 || saving) return;
+                  setSaving(true);
+                  try {
+                    await onNameChange?.(data.user.id, nextName);
+                    setLocalName({ source: data.user.name, value: nextName });
+                    setEditing(false);
+                    setMessage(onNameChange ? "Nombre guardado." : "Nombre actualizado solo en esta vista.");
+                  } catch {
+                    setMessage("No se pudo guardar el nombre. Intenta de nuevo.");
+                  } finally { setSaving(false); }
                 }}
               >
                 <label
@@ -98,6 +131,7 @@ export default function ProfilePage() {
                   autoComplete="name"
                   value={draftName}
                   required
+                  disabled={saving}
                   maxLength={80}
                   onChange={(event) => setDraftName(event.target.value)}
                   className="w-full rounded-xl border border-[#e5cfbb] bg-white px-3 py-[10px] text-[#55483c] outline-none focus:ring-2 focus:ring-[#f52e7040]"
@@ -105,12 +139,14 @@ export default function ProfilePage() {
                 <div className="mt-3 flex gap-2">
                   <button
                     type="submit"
+                    disabled={saving}
                     className="cursor-pointer rounded-full bg-[#f52e70] px-[15px] py-[9px] text-[12px] font-bold text-white hover:bg-[#df245f] focus-visible:outline-2 focus-visible:outline-[#104734]"
                   >
-                    Guardar nombre
+                    {saving ? "Guardando…" : "Guardar nombre"}
                   </button>
                   <button
                     type="button"
+                    disabled={saving}
                     onClick={() => setEditing(false)}
                     className="cursor-pointer rounded-full border border-[#dcc5b3] bg-white px-[15px] py-[9px] text-[12px] font-bold focus-visible:outline-2 focus-visible:outline-[#104734]"
                   >
@@ -143,13 +179,13 @@ export default function ProfilePage() {
               {[
                 {
                   label: "Obras en tu galería",
-                  count: 6,
+                  count: data.galleryCount,
                   link: "Ver galería →",
-                  to: "/galery",
+                  to: "/gallery",
                 },
                 {
                   label: "Ejercicios completados",
-                  count: 3,
+                  count: data.completedExercises,
                   link: "Ver ejercicios →",
                   to: "/exercise",
                 },
