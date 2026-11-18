@@ -59,6 +59,7 @@ const demoWorks: Omit<ProgressWork, "id">[] = [] = [
       metrics: [43, 51, 47],
     },
   ];
+// Contraste -> Iluminaciòn -> Balance
 const demoProgress: ProgressPageData = {
   userId: "demo",
   works: demoWorks.map((work) => ({ ...work, id: work.kind })),

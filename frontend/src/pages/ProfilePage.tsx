@@ -25,8 +25,8 @@ export type ProfilePageProps = {
 };
 
 const demoProfile: ProfilePageData = {
-  user: { id: "demo", name: "Evelyn Pinales", email: "evelyn@ejemplo.com", registeredAt: "2026-09-14", status: "Activa" },
-  biography: "Creadora en proceso · Cuenta privada",
+  user: { id: "demo", name: "Usuario", email: "usuario@ejemplo.com", registeredAt: "2026-09-14", status: "Activa" },
+  biography: "Creador@ en proceso · Cuenta privada",
   galleryCount: 6, completedExercises: 3,
 };
 

@@ -69,8 +69,7 @@ export function PageFrame({ children }: { children: ReactNode }) {
     <div className="pt-[9px] pb-7 text-[14px] text-[#104734]">
       {children}
       <footer className="mt-6 text-center text-[10px] leading-5 text-[#b6937c]">
-        El Espejo del Artista · Diseño conceptual basado en Entregables 1, 2 y 3
-        · ESCOM 2026
+        El Espejo del Artista · ESCOM 2026
       </footer>
     </div>
   );
@@ -600,7 +599,7 @@ export default function HomePage({ data }: HomePageProps = {}) {
   const recent: RecentAnalysis[] = (data ? data.recentAnalyses : demoRecent.map((work) => ({
     id: work.kind, kind: work.kind, title: work.name, date: work.date, status: "Completado" as const,
   }))).slice().sort((a, b) => (Date.parse(b.date) || 0) - (Date.parse(a.date) || 0)).slice(0, 4);
-  const userName = data ? data.user.name.trim().split(/\s+/)[0] || "artista" : "Evelyn";
+  const userName = data ? data.user.name.trim().split(/\s+/)[0] || "artista" : "Ejemplo";
   const tip = data ? data.tip : {
     title: "☀️ Explora las luces y sombras",
     description: "Una fuente de luz bien definida puede ayudarte a comprender el volumen en tus próximas obras.",
