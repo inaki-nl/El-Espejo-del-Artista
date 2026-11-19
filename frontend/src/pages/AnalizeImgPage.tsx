@@ -9,7 +9,6 @@ import {
 } from "./HomePage";
 
 // 03-analizar-obra: carga local y explicación del análisis de demostración.
-// TODO: 
 export default function AnalizeImgPage() {
   const [title, setTitle] = useState("Paisaje mexicano");
 

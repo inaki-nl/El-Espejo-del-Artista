@@ -4,7 +4,7 @@ import { Artwork } from "./HomePage";
 
 // 02-acceso: las dos pestañas son una demostración visual, sin autenticación real.
 // Se integra dentro del layout existente sin duplicar su navbar ni su encabezado.
-// TODO: Implementar en la opción de Crear Cuenta un captcha y la confirmación de la contraseña mediante otro textbox
+// TODO: Implementar en la opción de Crear Cuenta un captcha y la confirmación de la contraseña mediante otro textbox ademas de dividir el nombre por nombre, apellido paterno y apellido materno(Opcional)
 export default function AccessPage() {
   const [mode, setMode] = useState<"login" | "register">("login");
   const navigate = useNavigate();
