@@ -1,14 +1,37 @@
 import { useState } from "react";
-import { useNavigate } from "react-router";
+import { useNavigate } from "react-router-dom";
 import { Artwork } from "./HomePage";
+import { BACKEND_API_URL } from "../config/api";
 
 // 02-acceso: las dos pestañas son una demostración visual, sin autenticación real.
 // Se integra dentro del layout existente sin duplicar su navbar ni su encabezado.
 // TODO: Implementar en la opción de Crear Cuenta un captcha y la confirmación de la contraseña mediante otro textbox ademas de dividir el nombre por nombre, apellido paterno y apellido materno(Opcional)
-export default function AccessPage() {
+export default function AccessPage({ setUser }) {
   const [mode, setMode] = useState<"login" | "register">("login");
+  const [email, setEmail] = useState<string>("");
+  const [pass, setPass] = useState<string>("");
   const navigate = useNavigate();
 
+
+  const login = async () => {
+    const response = await fetch(`${BACKEND_API_URL}/auth/login`, {
+      body: JSON.stringify({ correo: email, contrasena: pass }),
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+    });
+
+    if (response.ok) {
+      let user = await response.json();
+      setUser(user.user);
+      navigate("/");
+    } else {
+      let message = await response.json();
+      alert(message.detail);
+    }
+  };
+
+  const createUser = async () => {};
   return (
     <div className="pt-[9px] pb-8">
       <section className="grid overflow-hidden rounded-[20px] border border-[#efd4bc] bg-[#fff8ef] xl:min-h-[740px] xl:grid-cols-2">
@@ -64,79 +87,72 @@ export default function AccessPage() {
                 </button>
               ))}
             </div>
-            <form
-              className="mt-6 space-y-4"
-              onSubmit={(event) => {
-                event.preventDefault();
-                navigate("/");
-              }}
-            >
-              {mode === "register" && (
-                <div>
-                  <label
-                    htmlFor="access-name"
-                    className="mb-[7px] block text-[12px] font-bold text-[#725440]"
-                  >
-                    Nombre
-                  </label>
-                  <input
-                    id="access-name"
-                    name="name"
-                    type="text"
-                    autoComplete="name"
-                    required
-                    maxLength={80}
-                    placeholder="Tu nombre"
-                    className="w-full rounded-[10px] border border-[#e5cfbb] bg-white px-[13px] py-3 text-[16px] text-[#55483c] outline-none focus:border-[#f52e70] focus:ring-2 focus:ring-[#f52e7026]"
-                  />
-                </div>
-              )}
+            {mode === "register" && (
               <div>
                 <label
-                  htmlFor="access-email"
+                  htmlFor="access-name"
                   className="mb-[7px] block text-[12px] font-bold text-[#725440]"
                 >
-                  Correo electrónico
+                  Nombre
                 </label>
                 <input
-                  id="access-email"
-                  name="email"
-                  type="email"
-                  autoComplete="email"
+                  id="access-name"
+                  name="name"
+                  type="text"
+                  autoComplete="name"
                   required
-                  placeholder="tu-correo@ejemplo.com"
+                  maxLength={80}
+                  placeholder="Tu nombre"
                   className="w-full rounded-[10px] border border-[#e5cfbb] bg-white px-[13px] py-3 text-[16px] text-[#55483c] outline-none focus:border-[#f52e70] focus:ring-2 focus:ring-[#f52e7026]"
                 />
               </div>
-              <div>
-                <label
-                  htmlFor="access-password"
-                  className="mb-[7px] block text-[12px] font-bold text-[#725440]"
-                >
-                  Contraseña
-                </label>
-                <input
-                  id="access-password"
-                  name="password"
-                  type="password"
-                  minLength={8}
-                  autoComplete={
-                    mode === "login" ? "current-password" : "new-password"
-                  }
-                  required
-                  placeholder="Mínimo 8 caracteres"
-                  className="w-full rounded-[10px] border border-[#e5cfbb] bg-white px-[13px] py-3 text-[16px] text-[#55483c] outline-none focus:border-[#f52e70] focus:ring-2 focus:ring-[#f52e7026]"
-                />
-              </div>
-              <button
-                type="submit"
-                className="w-full cursor-pointer rounded-full bg-[#f52e70] px-5 py-3 text-[13px] font-bold text-white shadow-[0_4px_9px_#f52e7026] hover:bg-[#df245f] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#104734]"
+            )}
+            <div>
+              <label
+                htmlFor="access-email"
+                className="mb-[7px] block text-[12px] font-bold text-[#725440]"
               >
-                {mode === "login"
-                  ? "Entrar a mi taller →"
-                  : "Crear mi cuenta →"}
-              </button>
-            </form>
+                Correo electrónico
+              </label>
+              <input
+                id="access-email"
+                name="email"
+                type="email"
+                autoComplete="email"
+                required
+                placeholder="tu-correo@ejemplo.com"
+                className="w-full rounded-[10px] border border-[#e5cfbb] bg-white px-[13px] py-3 text-[16px] text-[#55483c] outline-none focus:border-[#f52e70] focus:ring-2 focus:ring-[#f52e7026]"
+                onChange={(event) => setEmail(event.target.value)}
+              />
+            </div>
+            <div>
+              <label
+                htmlFor="access-password"
+                className="mb-[7px] block text-[12px] font-bold text-[#725440]"
+              >
+                Contraseña
+              </label>
+              <input
+                id="access-password"
+                name="password"
+                type="password"
+                minLength={8}
+                autoComplete={
+                  mode === "login" ? "current-password" : "new-password"
+                }
+                required
+                placeholder="Mínimo 8 caracteres"
+                className="w-full rounded-[10px] border border-[#e5cfbb] bg-white px-[13px] py-3 text-[16px] text-[#55483c] outline-none focus:border-[#f52e70] focus:ring-2 focus:ring-[#f52e7026]"
+                onChange={(event) => setPass(event.target.value)}
+              />
+            </div>
+            <button
+              type="submit"
+              className="w-full cursor-pointer rounded-full bg-[#f52e70] px-5 py-3 text-[13px] font-bold text-white shadow-[0_4px_9px_#f52e7026] hover:bg-[#df245f] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#104734]"
+              onClick={mode === "login" ? login : createUser}
+            >
+              {mode === "login" ? "Entrar a mi taller →" : "Crear mi cuenta →"}
+            </button>
             <p className="mt-5 text-[11px] leading-[18px] text-[#a08776]">
               Prototipo conceptual: el acceso se simula. No se crea una cuenta
               ni se guardan o envían tus credenciales.

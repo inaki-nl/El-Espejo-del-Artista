@@ -1,6 +1,7 @@
 import { useId, useRef, useState } from "react";
 import type { ReactNode } from "react";
-import { Link } from "react-router";
+import { Link } from "react-router-dom";
+import type { User } from "../App";
 
 export type ArtworkKind =
   "landscape" | "stillLife" | "portrait" | "garden" | "eye" | "house";
@@ -26,7 +27,7 @@ export type HomePageData = {
   recentAnalyses: RecentAnalysis[];
   tip: { title: string; description: string };
 };
-export type HomePageProps = { data?: HomePageData };
+export type HomePageProps = { data?: HomePageData, user?: User};
 
 /** Presentación de fechas ISO sin desplazar el día por la zona horaria.
  * Los textos de fecha de las maquetas se conservan para compatibilidad.
@@ -589,7 +590,7 @@ export function ImagePicker({ compact = false }: { compact?: boolean }) {
 /** Recibe data: HomePageData como prop. Sin data conserva únicamente la maqueta.
  * Un array vacío se muestra vacío: nunca se sustituye por obras de otra persona.
  */
-export default function HomePage({ data }: HomePageProps = {}) {
+export default function HomePage({ data, user }: HomePageProps = {}) {
   const demoRecent: { kind: ArtworkKind; name: string; date: string }[] = [
     { kind: "landscape", name: "Paisaje mexicano", date: "18 oct 2026" },
     { kind: "stillLife", name: "Bodegón con naranjas", date: "15 oct 2026" },
@@ -619,7 +620,7 @@ export default function HomePage({ data }: HomePageProps = {}) {
             id="welcome-title"
             className="text-[32px] leading-[1.08] font-bold text-[#873b2c] [font-family:Georgia,serif] sm:text-[42px]"
           >
-            ¡Hola, {userName}!
+            ¡Hola, {user.first_name}!
             <br />
             Tu mirada sigue creciendo.
           </h1>

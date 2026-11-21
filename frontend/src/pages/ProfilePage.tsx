@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link } from "react-router";
+import { Link } from "react-router-dom";
 import {
   Badge,
   DisplayDate,
@@ -10,9 +10,12 @@ import {
   SectionTitle,
 } from "./HomePage";
 import type { PageUser } from "./HomePage";
+import type { User } from "../App";
+import { BACKEND_API_URL } from "../config/api";
 
 // 09-perfil: información ficticia y edición del nombre solo durante esta visita.
 // No modifica credenciales ni afirma que exista una sesión autenticada.
+/*
 export type ProfilePageData = {
   user: PageUser & { email: string; registeredAt: string; status: "Activa" | "Inactiva" };
   biography: string;
@@ -22,6 +25,8 @@ export type ProfilePageData = {
 export type ProfilePageProps = {
   data?: ProfilePageData;
   onNameChange?: (userId: string, name: string) => void | Promise<void>;
+  user?: User;
+  setUser: 
 };
 
 const demoProfile: ProfilePageData = {
@@ -29,22 +34,38 @@ const demoProfile: ProfilePageData = {
   biography: "Creador@ en proceso · Cuenta privada",
   galleryCount: 6, completedExercises: 3,
 };
+*/
 
 /** API -> data: usuario autorizado, fechas ISO y contadores numéricos.
  * onNameChange permite persistir el nombre desde el contenedor; si no se entrega,
  * se mantiene la edición local de la maqueta, sin afirmar que se guardó en la API.
  */
-export default function ProfilePage({ data = demoProfile, onNameChange }: ProfilePageProps = {}) {
-  return <ProfileContent key={data.user.id} data={data} onNameChange={onNameChange} />;
+export default function ProfilePage({ user, setUser }) {
+  return <ProfileContent key={user.id_user} user={user} setUser={setUser} />;
 }
 
-function ProfileContent({ data, onNameChange }: { data: ProfilePageData; onNameChange?: ProfilePageProps["onNameChange"] }) {
-  const [localName, setLocalName] = useState<{ source: string; value: string } | null>(null);
-  const name = localName?.source === data.user.name ? localName.value : data.user.name;
+function ProfileContent({ user, setUser }) {
+  const name: string = [user.first_name, user.middle_name, user.last_name].join(
+    " ",
+  );
   const [draftName, setDraftName] = useState(name);
   const [editing, setEditing] = useState(false);
   const [message, setMessage] = useState("");
   const [saving, setSaving] = useState(false);
+
+  const logout = async () => {
+    const response = await fetch(`${BACKEND_API_URL}/auth/logout`, {
+      method: "POST",
+      credentials: "include",
+    });
+
+    if (response.ok) {
+      alert("Logout perfecto");
+      setUser(null);
+    } else {
+      alert("No se pudo cerrar sesión de manera correcta");
+    }
+  };
 
   return (
     <PageFrame>
@@ -70,13 +91,23 @@ function ProfileContent({ data, onNameChange }: { data: ProfilePageData; onNameC
               </span>
               <div>
                 <h2 className="text-[21px] font-bold [font-family:Georgia,serif]">
-                  {name}
+                  {user.first_name}
                 </h2>
                 <p className="mt-3 text-[12px] text-[#8b7b6b]">
-                  {data.biography}
+                  Artista en progreso
                 </p>
                 <div className="mt-3">
-                  <Badge>Miembro desde <DisplayDate value={data.user.registeredAt} options={{ day: undefined, month: "long", year: "numeric" }} /></Badge>
+                  <Badge>
+                    Miembro desde{" "}
+                    <DisplayDate
+                      value={user.register_date}
+                      options={{
+                        day: undefined,
+                        month: "long",
+                        year: "numeric",
+                      }}
+                    />
+                  </Badge>
                 </div>
               </div>
             </div>
@@ -86,9 +117,12 @@ function ProfileContent({ data, onNameChange }: { data: ProfilePageData; onNameC
             <dl className="mt-3 grid gap-[14px] sm:grid-cols-2">
               {[
                 ["Nombre", name],
-                ["Correo electrónico", data.user.email],
-                ["Fecha de registro", <DisplayDate key="registered" value={data.user.registeredAt} />],
-                ["Estado de cuenta", data.user.status],
+                ["Correo electrónico", user.email],
+                [
+                  "Fecha de registro",
+                  <DisplayDate key="registered" value={user.register_date} />,
+                ],
+                ["Tipo de cuenta", user.type],
               ].map(([label, value]) => (
                 <div
                   key={String(label)}
@@ -102,23 +136,7 @@ function ProfileContent({ data, onNameChange }: { data: ProfilePageData; onNameC
               ))}
             </dl>
             {editing ? (
-              <form
-                className="mt-[18px]"
-                onSubmit={async (event) => {
-                  event.preventDefault();
-                  const nextName = draftName.trim();
-                  if (!nextName || nextName.length > 80 || saving) return;
-                  setSaving(true);
-                  try {
-                    await onNameChange?.(data.user.id, nextName);
-                    setLocalName({ source: data.user.name, value: nextName });
-                    setEditing(false);
-                    setMessage(onNameChange ? "Nombre guardado." : "Nombre actualizado solo en esta vista.");
-                  } catch {
-                    setMessage("No se pudo guardar el nombre. Intenta de nuevo.");
-                  } finally { setSaving(false); }
-                }}
-              >
+              <div>
                 <label
                   htmlFor="profile-name"
                   className="mb-2 block text-[12px] font-bold text-[#725440]"
@@ -153,7 +171,7 @@ function ProfileContent({ data, onNameChange }: { data: ProfilePageData; onNameC
                     Cancelar
                   </button>
                 </div>
-              </form>
+              </div>
             ) : (
               <button
                 type="button"
@@ -179,13 +197,15 @@ function ProfileContent({ data, onNameChange }: { data: ProfilePageData; onNameC
               {[
                 {
                   label: "Obras en tu galería",
-                  count: data.galleryCount,
+                  // Data.galery.count
+                  count: 10000,
                   link: "Ver galería →",
                   to: "/gallery",
                 },
                 {
                   label: "Ejercicios completados",
-                  count: data.completedExercises,
+                  // Data.exercises.count
+                  count: 10000,
                   link: "Ver ejercicios →",
                   to: "/exercise",
                 },
@@ -229,11 +249,7 @@ function ProfileContent({ data, onNameChange }: { data: ProfilePageData; onNameC
               </button>
               <button
                 type="button"
-                onClick={() =>
-                  setMessage(
-                    "Esta es una vista de demostración; no hay una sesión autenticada que cerrar.",
-                  )
-                }
+                onClick={logout}
                 className="cursor-pointer rounded-full bg-[#f52e70] px-[15px] py-2 text-[12px] font-bold text-white shadow-[0_4px_9px_#f52e7026] hover:bg-[#df245f] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#104734]"
               >
                 Cerrar sesión
