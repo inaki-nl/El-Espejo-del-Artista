@@ -1,4 +1,4 @@
-import { useLocation } from "react-router";
+import { useLocation } from "react-router-dom";
 
 // Colores del papel picado de las vistas; todas las clases son estáticas para Tailwind.
 const pennantColors = [

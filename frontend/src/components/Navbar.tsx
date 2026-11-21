@@ -1,4 +1,4 @@
-import { Link, useLocation } from "react-router";
+import { Link, useLocation } from "react-router-dom";
 
 // Opciones del menú enlazadas a las rutas existentes del taller.
 const workshopLinks = [

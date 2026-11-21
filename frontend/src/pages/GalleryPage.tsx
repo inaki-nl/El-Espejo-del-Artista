@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link } from "react-router";
+import { Link } from "react-router-dom";
 import { Artwork, Badge, DisplayDate, PageFrame, PageHeading, PageLink } from "./HomePage";
 import type { AnalysisStatus, ArtworkData, ArtworkKind } from "./HomePage";
 
