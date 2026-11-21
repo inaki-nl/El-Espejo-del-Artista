@@ -1,4 +1,5 @@
 from argon2 import PasswordHasher
+from argon2.exceptions import VerifyMismatchError, VerificationError
 
 ph = PasswordHasher()
 
@@ -9,5 +10,5 @@ def validar_contrasena(hash_contrasena: str, contrasena_intento):
     try:
         ph.verify(hash_contrasena, contrasena_intento)
         return True
-    except Exception:
+    except (VerifyMismatchError, VerificationError):
         return False
