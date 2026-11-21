@@ -1,5 +1,5 @@
-from sqlalchemy import String, DateTime, func
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy import ForeignKey, String, DateTime, func
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 from datetime import datetime
 
 from app.database.base import Base
@@ -17,3 +17,7 @@ class Usuario(Base):
     fecha_registro: Mapped[datetime] = mapped_column(
         DateTime, server_default=func.current_timestamp(), nullable=False
     )
+    id_tipo: Mapped[int] = mapped_column(
+        ForeignKey("TiposUsuario.id_tipo"), nullable=False
+    )
+    tipo_usuario = relationship("TiposUsuario")
