@@ -1,5 +1,2 @@
 # Cache de MacOS
 .DS_Store
-
-# Variables de Entorno
-.env
